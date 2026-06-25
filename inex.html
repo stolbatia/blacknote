@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник с Google Аккаунтом</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .auth-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .hidden { display: none; }
+        .user-info { margin-bottom: 20px; }
+        .user-info img { border-radius: 50%; width: 70px; height: 70px; }
+        textarea { width: 100%; height: 100px; margin-top: 10px; box-sizing: border-box;}
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 50px; background: #e74c3c; color: white; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" class="auth-card">
+        <h2>Добро пожаловать в Дневник</h2>
+        <p>Войдите через свой реальный Google-аккаунт, чтобы писать с любого устройства:</p>
+        
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+    </div>
+
+    <div id="diaryScreen" class="auth-card hidden">
+        <div class="user-info">
+            <img id="userAvatar" src="" alt="Аватар">
+            <h3 id="userName">Привет!</h3>
+        </div>
+        
+        <h3>Мой дневник синхронизирован!</h3>
+        <textarea placeholder="Текст твоего дня..."></textarea>
+        <br><br>
+        <button onclick="logout()">Выйти из аккаунта</button>
+    </div>
+
+<script>
+    // Функция, которую вызывает Google после успешного входа
+    function handleCredentialResponse(response) {
+        // Декодируем токен, который прислал Google, чтобы получить данные пользователя
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const user = JSON.parse(jsonPayload);
+
+        // Показываем данные пользователя на экране
+        document.getElementById('userName').innerText = `Привет, ${user.name}!`;
+        document.getElementById('userAvatar').src = user.picture;
+
+        // Переключаем экраны
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('diaryScreen').classList.remove('hidden');
+        
+        console.log("ID пользователя в Google:", user.sub); // По этому ID облачная база будет узнавать твои записи
+    }
+
+    // Выход из аккаунта
+    function logout() {
+        google.accounts.id.disableAutoSelect();
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('diaryScreen').classList.add('hidden');
+    }
+</script>
+</body>
+</html>
